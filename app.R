@@ -35,12 +35,13 @@ header <- dashboardHeader(
 )
 
 sidebar <- dashboardSidebar(
+    disable = TRUE
 )
 
 body <- dashboardBody(
     fluidRow(
         box(
-            width = "95%",
+            width = "100%",
 
             dateInput("start_date", "Jake's Performance Since", 
                       value = "2020-01-01")
@@ -49,13 +50,11 @@ body <- dashboardBody(
     
     fluidRow(
         box(
+            width = "100%",
+            
             plotOutput("cumulative_mileage"),
-            plotOutput("cumulative_minutes")
-        ),
-        
-        box(
-            plotOutput("cumulative_elevation"),
-            plotOutput("daily_activity")
+            plotOutput("cumulative_minutes"),
+            plotOutput("cumulative_elevation")
         )    
     )
 )
