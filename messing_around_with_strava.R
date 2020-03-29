@@ -18,7 +18,7 @@ stoken <- httr::config(token = readRDS('.httr-oauth')[[1]])
 #JAKE -> 5954092
 #JEANA -> 51784376
 
-myinfo <- get_athlete(stoken, id = '6034935')
+myinfo <- get_athlete(stoken, id = '5954092')
 jake <- get_activity_list(stoken)
 
 for(i in 1:260){
