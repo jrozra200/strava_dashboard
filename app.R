@@ -49,11 +49,20 @@ body <- dashboardBody(
         ),
     
     fluidRow(
-        box(plotOutput("cumulative_mileage"), width = 4),
-        
-        box(plotOutput("cumulative_minutes"), width = 4),
-        
-        box(plotOutput("cumulative_elevation"), width = 4)
+        tabBox(
+            width = "100%",
+            
+            tabPanel(
+                title = "Cumulative Stats",
+                splitLayout(
+                    cellWidths = c("33%", "33%", "33%"),
+                    
+                    plotOutput("cumulative_mileage"),
+                    plotOutput("cumulative_minutes"),
+                    plotOutput("cumulative_elevation")
+                )
+            )
+        )
     )
 )
 
