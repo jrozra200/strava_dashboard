@@ -61,6 +61,17 @@ body <- dashboardBody(
                     plotOutput("cumulative_minutes"),
                     plotOutput("cumulative_elevation")
                 )
+            ),
+            
+            tabPanel(
+                title = "Individual Workout Stats",
+                
+                splitLayout(
+                    cellWidths = c("50%", "50%"),
+                    
+                    plotOutput("daily_activity"),
+                    plotOutput("change_in_mph")
+                )
             )
         )
     )
@@ -133,6 +144,41 @@ server <- function(input, output) {
         graph_dat$cumulative_gain <- cumsum(graph_dat$total_elevation_gain_ft)
         
         return(graph_dat)
+    })
+    
+    moving_stats <- reactive({
+        dat <- format_df()
+        dat <- dat[dat$type == "Run", ]
+        dat <- dat[dat$distance > 0, ]
+        
+        dat <- dat[order(dat$date), ]
+        
+        sum_dat <- data.frame()
+        
+        for(i in 1:dim(dat)[1]){
+            if((i - 7) < 1){
+                tmp <- data.frame(
+                    date = dat$date[i],
+                    total_time = sum(dat$minutes[1:i]),
+                    total_miles = sum(dat$miles[1:i]),
+                    total_activites = dim(dat[1:i, ])[1]
+                )
+            } else {
+                tmp <- data.frame(
+                    date = dat$date[i],
+                    total_time = sum(dat$minutes[(i-7):i]),
+                    total_miles = sum(dat$miles[(i-7):i]),
+                    total_activites = dim(dat[(i-7):i, ])[1]
+                )
+            }
+            sum_dat <- rbind(sum_dat, tmp)
+        }
+        
+        sum_dat$avg_speed <- sum_dat$total_miles / (sum_dat$total_time / 60)
+        sum_dat$avg_time <- sum_dat$total_time / sum_dat$total_activites
+        sum_dat$min_per_mile <- 1 / (sum_dat$avg_speed / 60)
+        
+        return(sum_dat)
     })
     
     output$cumulative_mileage <- renderPlot({
@@ -214,6 +260,26 @@ server <- function(input, output) {
             ggtitle(paste0("Miles per Day; Average Workout ", 
                            round(mean(dat$miles), 2), " miles")) +
             ylab("Miles") +
+            theme(panel.background = element_blank(), 
+                  panel.grid.major.x = element_blank(),
+                  panel.grid.major.y = element_line(color = "grey"),
+                  legend.position = "top", legend.text = element_text(size = 12),
+                  legend.title = element_blank(), title = element_text(size = 16),
+                  axis.text = element_text(size = 12),
+                  axis.title.x = element_blank(),
+                  axis.ticks = element_blank(),
+                  plot.background = element_rect(fill = "white", 
+                                                 color = "light gray", size = 1))
+    })
+    
+    output$change_in_mph <- renderPlot({
+        dat <- moving_stats()
+        
+        ggplot(data = dat, aes(x = date, y = min_per_mile)) + 
+            geom_line(color = "navy") +
+            scale_y_continuous(label = comma_format()) +
+            ggtitle("Moving Average Run Speed (last 7 events)") +
+            ylab("Minutes per Mile") +
             theme(panel.background = element_blank(), 
                   panel.grid.major.x = element_blank(),
                   panel.grid.major.y = element_line(color = "grey"),
