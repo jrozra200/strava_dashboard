@@ -108,8 +108,26 @@ server <- function(input, output) {
         return(jake_df)
     })
     
-    output$cumulative_mileage <- renderPlot({
+    cum_graph_df <- reactive({
         dat <- format_df()
+        
+        graph_dat <- dat %>%
+            group_by(date) %>% 
+            summarise(miles = sum(miles),
+                      minutes = sum(minutes),
+                      total_elevation_gain_ft = sum(total_elevation_gain_ft))
+        
+        graph_dat <- graph_dat[order(graph_dat$date), ]
+        
+        graph_dat$cumulative_mileage <- cumsum(graph_dat$miles)
+        graph_dat$cumulative_time <- cumsum(graph_dat$minutes)
+        graph_dat$cumulative_gain <- cumsum(graph_dat$total_elevation_gain_ft)
+        
+        return(graph_dat)
+    })
+    
+    output$cumulative_mileage <- renderPlot({
+        dat <- cum_graph_df()
         
         ## CUMULATIVE MILEAGE
         ggplot(data = dat, aes(x = date, y = cumulative_mileage)) + 
@@ -131,7 +149,7 @@ server <- function(input, output) {
     })
     
     output$cumulative_minutes <- renderPlot({
-        dat <- format_df()
+        dat <- cum_graph_df()
         
         ## CUMULATIVE MINUTES
         ggplot(data = dat, aes(x = date, y = cumulative_time))+ 
@@ -153,7 +171,7 @@ server <- function(input, output) {
     })
     
     output$cumulative_elevation <- renderPlot({
-        dat <- format_df()
+        dat <- cum_graph_df()
         
         ## CUMULATIVE ELEVATION
         ggplot(data = dat, aes(x = date, y = cumulative_gain))+ 
