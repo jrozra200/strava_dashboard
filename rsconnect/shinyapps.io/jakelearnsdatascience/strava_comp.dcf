@@ -1,0 +1,13 @@
+name: strava_comp
+title: strava_comp
+username:
+account: jakelearnsdatascience
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2017958
+bundleId: 2941680
+url: https://jakelearnsdatascience.shinyapps.io/strava_comp/
+when: 1585531025.70566
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: format_data_scratch.R|messing_around_with_strava.R|README.md

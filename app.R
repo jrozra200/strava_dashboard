@@ -14,8 +14,8 @@ header <- dashboardHeader(
     
     tags$li(a(href = paste0('https://twitter.com/intent/tweet?text=Check%20out',
                             '%20how%20great%20of%20a%20runner%20Jake%20(@rozra',
-                            'n00)%20is%20on%20Strava&url=https%3a%2f%2fjakelearnsdatascience.shinyapps.io%2',
-                            'ftwitter_shiny%2f'),
+                            'n00)%20is%20on%20Strava&url=https%3a%2f%2fjakelea',
+                            'rnsdatascience.shinyapps.io%2ftstrava_comp%2f'),
               target = "_blank",
               icon("share-alt"),
               title = "Share this app on Twitter"),
@@ -49,30 +49,29 @@ body <- dashboardBody(
         ),
     
     fluidRow(
-        tabBox(
+        box(
             width = "100%",
-            
-            tabPanel(
-                title = "Cumulative Stats",
-                splitLayout(
-                    cellWidths = c("33%", "33%", "33%"),
-                    
-                    plotOutput("cumulative_mileage"),
-                    plotOutput("cumulative_minutes"),
-                    plotOutput("cumulative_elevation")
-                )
-            ),
-            
-            tabPanel(
-                title = "Individual Workout Stats",
+            title = "Cumulative Stats",
+            splitLayout(
+                cellWidths = c("33%", "33%", "33%"),
                 
-                splitLayout(
-                    cellWidths = c("33%", "33%", "33%"),
-                    
-                    plotOutput("daily_activity"),
-                    plotOutput("change_in_mph"),
-                    plotOutput("change_in_mins")
+                plotOutput("cumulative_mileage"),
+                plotOutput("cumulative_minutes"),
+                plotOutput("cumulative_elevation")
                 )
+            )
+        ),
+        
+    fluidRow(
+        box(
+            width = "100%",
+            title = "Individual Workout Stats",
+            splitLayout(
+                cellWidths = c("33%", "33%", "33%"),
+                
+                plotOutput("daily_activity"),
+                plotOutput("change_in_mph"),
+                plotOutput("change_in_mins")
             )
         )
     )
@@ -118,9 +117,10 @@ server <- function(input, output) {
         jake_df$minutes <- jake_df$moving_time / 60
         jake_df$total_elevation_gain_ft <- jake_df$total_elevation_gain * 3.28084
         
-        jake_df <- jake_df[jake_df$start_time_2 >= input$start_date, ]
-        
         jake_df$date <- as.Date(jake_df$start_time_2)
+        
+        jake_df <- jake_df[jake_df$date >= input$start_date, ]
+        
         jake_df <- jake_df[order(jake_df$date), ]
         jake_df$cumulative_mileage <- cumsum(jake_df$miles)
         jake_df$cumulative_time <- cumsum(jake_df$minutes)
