@@ -49,13 +49,11 @@ body <- dashboardBody(
         ),
     
     fluidRow(
-        box(
-            width = "100%",
-            
-            plotOutput("cumulative_mileage"),
-            plotOutput("cumulative_minutes"),
-            plotOutput("cumulative_elevation")
-        )    
+        box(plotOutput("cumulative_mileage"), width = 4),
+        
+        box(plotOutput("cumulative_minutes"), width = 4),
+        
+        box(plotOutput("cumulative_elevation"), width = 4)
     )
 )
 
@@ -117,7 +115,7 @@ server <- function(input, output) {
         ggplot(data = dat, aes(x = date, y = cumulative_mileage)) + 
             geom_line(color = "navy") + 
             scale_y_continuous(label = comma_format()) +
-            ggtitle(paste0("Cumulative Mileage Since ", 
+            ggtitle(paste0("Cum Mileage Since ", 
                            format(min(dat$date), "%b %d, %Y"))) +
             ylab("Miles") +
             theme(panel.background = element_blank(), 
@@ -139,7 +137,7 @@ server <- function(input, output) {
         ggplot(data = dat, aes(x = date, y = cumulative_time))+ 
             geom_line(color = "navy") + 
             scale_y_continuous(label = comma_format()) +
-            ggtitle(paste0("Cumulative Minutes Working Out Since ", 
+            ggtitle(paste0("Cum Min Working Out Since ", 
                            format(min(dat$date), "%b %d, %Y"))) +
             ylab("Minutes") +
             theme(panel.background = element_blank(), 
@@ -161,7 +159,7 @@ server <- function(input, output) {
         ggplot(data = dat, aes(x = date, y = cumulative_gain))+ 
             geom_line(color = "navy") + 
             scale_y_continuous(label = comma_format()) +
-            ggtitle(paste0("Cumulative Elevation Gained Since ", 
+            ggtitle(paste0("Cum Elev Gain Since ", 
                            format(min(dat$date), "%b %d, %Y"))) +
             ylab("Feet") +
             theme(panel.background = element_blank(), 
