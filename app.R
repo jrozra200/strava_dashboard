@@ -67,10 +67,11 @@ body <- dashboardBody(
                 title = "Individual Workout Stats",
                 
                 splitLayout(
-                    cellWidths = c("50%", "50%"),
+                    cellWidths = c("33%", "33%", "33%"),
                     
                     plotOutput("daily_activity"),
-                    plotOutput("change_in_mph")
+                    plotOutput("change_in_mph"),
+                    plotOutput("change_in_mins")
                 )
             )
         )
@@ -280,6 +281,26 @@ server <- function(input, output) {
             scale_y_continuous(label = comma_format()) +
             ggtitle("Moving Average Run Speed (last 7 events)") +
             ylab("Minutes per Mile") +
+            theme(panel.background = element_blank(), 
+                  panel.grid.major.x = element_blank(),
+                  panel.grid.major.y = element_line(color = "grey"),
+                  legend.position = "top", legend.text = element_text(size = 12),
+                  legend.title = element_blank(), title = element_text(size = 16),
+                  axis.text = element_text(size = 12),
+                  axis.title.x = element_blank(),
+                  axis.ticks = element_blank(),
+                  plot.background = element_rect(fill = "white", 
+                                                 color = "light gray", size = 1))
+    })
+    
+    output$change_in_mins <- renderPlot({
+        dat <- moving_stats()
+        
+        ggplot(data = dat, aes(x = date, y = avg_time)) + 
+            geom_line(color = "navy") +
+            scale_y_continuous(label = comma_format()) +
+            ggtitle("Moving Average Time Worked (last 7 events)") +
+            ylab("Minutes") +
             theme(panel.background = element_blank(), 
                   panel.grid.major.x = element_blank(),
                   panel.grid.major.y = element_line(color = "grey"),
