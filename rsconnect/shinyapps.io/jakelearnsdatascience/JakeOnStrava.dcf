@@ -1,13 +1,13 @@
-name: Jake on Strava
-title: Jake on Strava
+name: JakeOnStrava
+title: JakeOnStrava
 username:
 account: jakelearnsdatascience
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
-appId: 2017958
-bundleId: 2941691
-url: https://jakelearnsdatascience.shinyapps.io/strava_comp/
-when: 1585531416.85738
+appId: 2152116
+bundleId: 3040079
+url: https://jakelearnsdatascience.shinyapps.io/JakeOnStrava/
+when: 1587405213.46335
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: format_data_scratch.R|messing_around_with_strava.R|README.md
