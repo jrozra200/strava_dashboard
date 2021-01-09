@@ -5,9 +5,9 @@ account: jakelearnsdatascience
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 2152116
-bundleId: 3040079
+bundleId: 4074432
 url: https://jakelearnsdatascience.shinyapps.io/JakeOnStrava/
-when: 1587405213.46335
+when: 1610156531.67934
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: format_data_scratch.R|messing_around_with_strava.R|README.md
+ignoredFiles: Brewfile|format_data_scratch.R|messing_around_with_strava.R|README.md

@@ -27,3 +27,27 @@ for(i in 1:260){
 
 rdc <- get_club(stoken, id = '592304', request = "activities")
 as.data.frame(rdc)
+
+
+library(calendR)
+library(lubridate)
+
+jake_df <- jake_df[jake_df$start_time_2 >= "2021-01-01", ]
+
+cal_df <- data.frame(text = paste0(jake_df$type, "\n", round(jake_df$miles, 2), 
+                                   " miles\n", round(jake_df$minutes, 2), 
+                                   " minutes"),
+                     position = day(jake_df$start_time_2))
+
+calendR(year = year(Sys.Date()), 
+        month = month(Sys.Date()),
+        text = cal_df$text,
+        text.pos = cal_df$position, 
+        text.size = 4.5,
+        text.col = 4,
+        special.days = c((day(Sys.Date()) + 1):31),
+        special.col = "light gray",
+        title = paste0("Performance for ", 
+                       month(Sys.Date(), label = TRUE, abbr = FALSE), 
+                       " ", year(Sys.Date())),
+        subtitle = "Future Days in Gray; No Workout on Blank Days")

@@ -6,6 +6,8 @@ library(ggplot2)
 library(dplyr)
 library(scales)
 library(RColorBrewer)
+library(calendR)
+library(lubridate)
 
 stoken <- httr::config(token = readRDS('.httr-oauth')[[1]])
 
@@ -13,11 +15,11 @@ header <- dashboardHeader(
     title = "Run Jake Run!", 
     
     tags$li(a(href = paste0('https://twitter.com/intent/tweet?text=Check%20out',
-                            '%20how%20great%20of%20a%20runner%20Jake%20(@rozra',
-                            'n00)%20is%20on%20Strava&url=https%3a%2f%2fjakelea',
-                            'rnsdatascience.shinyapps.io%2ftstrava_comp%2f'),
+                            '%20how%20great%20of%20a%20runner%20Jake%20(@Stats',
+                            'ManPHL)%20is%20on%20Strava&url=https%3a%2f%2fjakelea',
+                            'rnsdatascience.shinyapps.io%2ftJakeOnStrava%2f'),
               target = "_blank",
-              icon("share-alt"),
+              icon("twitter"),
               title = "Share this app on Twitter"),
             class = "dropdown"),
     
@@ -44,35 +46,52 @@ body <- dashboardBody(
             width = "100%",
 
             dateInput("start_date", "Jake's Performance Since", 
-                      value = "2020-01-01")
+                      value = "2020-12-25")
             )
         ),
     
     fluidRow(
-        box(
-            width = "100%",
-            title = "Cumulative Stats",
-            splitLayout(
-                cellWidths = c("33%", "33%", "33%"),
-                
-                plotOutput("cumulative_mileage"),
-                plotOutput("cumulative_minutes"),
-                plotOutput("cumulative_elevation")
-                )
-            )
-        ),
-        
-    fluidRow(
-        box(
-            width = "100%",
-            title = "Individual Workout Stats",
-            splitLayout(
-                cellWidths = c("33%", "33%", "33%"),
-                
-                plotOutput("daily_activity"),
-                plotOutput("change_in_mph"),
-                plotOutput("change_in_mins")
-            )
+        tabBox(title = "Run Jake Run",
+               id = "tabset1",
+               height = "100%",
+               width = "100%",
+               tabPanel(
+                   "Current Month Performance",
+                   box(
+                       width = "100%",
+                       title = "Current Month",
+                       plotOutput("current_month")
+                   )
+               ),
+               tabPanel(
+                   "Cumulative Stats",
+                   box(
+                       width = "100%",
+                       title = "Cumulative Stats",
+                       splitLayout(
+                           cellWidths = c("33%", "33%", "33%"),
+                           
+                           plotOutput("cumulative_mileage"),
+                           plotOutput("cumulative_minutes"),
+                           plotOutput("cumulative_elevation")
+                       )
+                   )
+               ),
+               
+               tabPanel(
+                   "Individual",
+                   box(
+                       width = "100%",
+                       title = "Individual Workout Stats",
+                       splitLayout(
+                           cellWidths = c("33%", "33%", "33%"),
+                           
+                           plotOutput("daily_activity"),
+                           plotOutput("change_in_mph"),
+                           plotOutput("change_in_mins")
+                       )
+                   )
+               )
         )
     )
 )
@@ -180,6 +199,33 @@ server <- function(input, output) {
         sum_dat$min_per_mile <- 1 / (sum_dat$avg_speed / 60)
         
         return(sum_dat)
+    })
+    
+    output$current_month <- renderPlot({
+        dat <- format_df()
+        
+        current_month <- paste0(year(Sys.Date()), "-", month(Sys.Date()), "-01")
+        
+        dat <- dat[dat$start_time_2 >= current_month, ]
+        
+        cal_df <- data.frame(text = paste0(dat$type, "\n", round(dat$miles, 2), 
+                                           " miles\n", round(dat$minutes, 2), 
+                                           " minutes"),
+                             position = day(dat$start_time_2))
+        
+        calendR(year = year(Sys.Date()), 
+                month = month(Sys.Date()),
+                text = cal_df$text,
+                text.pos = cal_df$position, 
+                text.size = 3.5,
+                text.col = 4,
+                special.days = c((day(Sys.Date()) + 1):31),
+                special.col = "light gray",
+                title = paste0("Performance for ", 
+                               month(Sys.Date(), label = TRUE, abbr = FALSE), 
+                               " ", year(Sys.Date())),
+                subtitle = "Future Days in Gray; No Workout on Blank Days")
+        
     })
     
     output$cumulative_mileage <- renderPlot({
