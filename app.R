@@ -8,6 +8,7 @@ library(scales)
 library(RColorBrewer)
 library(calendR)
 library(lubridate)
+library(knitr)
 
 stoken <- httr::config(token = readRDS('.httr-oauth')[[1]])
 
@@ -55,41 +56,74 @@ body <- dashboardBody(
                id = "tabset1",
                height = "100%",
                width = "100%",
+               
+               tabPanel(
+                   "Cumulative Stats",
+                   
+                   fluidRow(
+                       box(
+                           width = "100%",
+                           title = "Cumulative Mileage, Minutes, & Elevation",
+                           
+                           valueBoxOutput("cumulative_mileage_num"),
+                           valueBoxOutput("cumulative_minutes_num"),
+                           valueBoxOutput("cumulative_elevation_num")
+                       )
+                   ),
+                   
+                   fluidRow(
+                       box(
+                           width = "100%",
+                           title = "Cumulative Graphs",
+                           splitLayout(
+                               cellWidths = c("33%", "33%", "33%"),
+                               
+                               plotOutput("cumulative_mileage"),
+                               plotOutput("cumulative_minutes"),
+                               plotOutput("cumulative_elevation")
+                           )
+                        )
+                    )
+               ),
+               
+               tabPanel(
+                   "Individual Workout Details",
+                   fluidRow(
+                       box(
+                           width = "100%",
+                           title = "Individual Workout Stats",
+                           plotOutput("daily_activity")
+                       ),
+                   ),
+                   
+                   fluidRow(
+                       box(
+                           width = "100%",
+                           title = "Average Speed and Time Worked",
+                           splitLayout(
+                               cellWidths = c("50%", "50%"),
+                               
+                               plotOutput("change_in_mph"),
+                               plotOutput("change_in_mins")
+                           )
+                       )    
+                   ),
+                   
+                   fluidRow(
+                       box(
+                           width = "100%",
+                           title = "All Activities",
+                           tableOutput("table_activities")
+                       )
+                   )
+               ),
+               
                tabPanel(
                    "Current Month Performance",
                    box(
                        width = "100%",
                        title = "Current Month",
                        plotOutput("current_month")
-                   )
-               ),
-               tabPanel(
-                   "Cumulative Stats",
-                   box(
-                       width = "100%",
-                       title = "Cumulative Stats",
-                       splitLayout(
-                           cellWidths = c("33%", "33%", "33%"),
-                           
-                           plotOutput("cumulative_mileage"),
-                           plotOutput("cumulative_minutes"),
-                           plotOutput("cumulative_elevation")
-                       )
-                   )
-               ),
-               
-               tabPanel(
-                   "Individual",
-                   box(
-                       width = "100%",
-                       title = "Individual Workout Stats",
-                       splitLayout(
-                           cellWidths = c("33%", "33%", "33%"),
-                           
-                           plotOutput("daily_activity"),
-                           plotOutput("change_in_mph"),
-                           plotOutput("change_in_mins")
-                       )
                    )
                )
         )
@@ -136,7 +170,7 @@ server <- function(input, output) {
         jake_df$minutes <- jake_df$moving_time / 60
         jake_df$total_elevation_gain_ft <- jake_df$total_elevation_gain * 3.28084
         
-        jake_df$date <- as.Date(jake_df$start_time_2)
+        jake_df$date <- as_date(jake_df$start_time_2)
         
         jake_df <- jake_df[jake_df$date >= input$start_date, ]
         
@@ -228,15 +262,49 @@ server <- function(input, output) {
         
     })
     
+    output$cumulative_mileage_num <- renderValueBox({
+        dat <- format_df()
+        
+        valueBox(
+            comma(round(sum(dat$miles), 2), accuracy = 0.01), 
+            paste0("Miles Traveled Since ", 
+                   format(input$start_date, "%b %d, %Y")), 
+            icon = icon("map-marked-alt", lib = "font-awesome"), color = "blue"
+        )
+    })
+    
+    output$cumulative_minutes_num <- renderValueBox({
+        dat <- format_df()
+        
+        valueBox(
+            comma(round(sum(dat$minutes), 2), accuracy = 0.01), 
+            paste0("Minutes Worked Since ", 
+                   format(input$start_date, "%b %d, %Y")), 
+            icon = icon("stopwatch", lib = "font-awesome"), color = "light-blue"
+        )
+    })
+    
+    output$cumulative_elevation_num <- renderValueBox({
+        dat <- format_df()
+        
+        valueBox(
+            comma(round(sum(dat$total_elevation_gain_ft), 2), accuracy = 0.01), 
+            paste0("Elevation Gained (feet) Since ", 
+                   format(input$start_date, "%b %d, %Y")), 
+            icon = icon("mountain", lib = "font-awesome"), 
+            color = "aqua"
+        )
+    })
+    
     output$cumulative_mileage <- renderPlot({
         dat <- cum_graph_df()
         
         ## CUMULATIVE MILEAGE
         ggplot(data = dat, aes(x = date, y = cumulative_mileage)) + 
-            geom_line(color = "navy") + 
+            geom_line(color = "#3944BC", size = 2) + 
             scale_y_continuous(label = comma_format()) +
-            ggtitle(paste0("Cum Mileage Since ", 
-                           format(min(dat$date), "%b %d, %Y"))) +
+            ggtitle(paste0("Miles Traveled Since ", 
+                           format(input$start_date, "%b %d, %Y"))) +
             ylab("Miles") +
             theme(panel.background = element_blank(), 
                   panel.grid.major.x = element_blank(),
@@ -255,10 +323,10 @@ server <- function(input, output) {
         
         ## CUMULATIVE MINUTES
         ggplot(data = dat, aes(x = date, y = cumulative_time))+ 
-            geom_line(color = "navy") + 
+            geom_line(color = "#4682B4", size = 2) + 
             scale_y_continuous(label = comma_format()) +
-            ggtitle(paste0("Cum Min Working Out Since ", 
-                           format(min(dat$date), "%b %d, %Y"))) +
+            ggtitle(paste0("Minutes Worked Since ", 
+                           format(input$start_date, "%b %d, %Y"))) +
             ylab("Minutes") +
             theme(panel.background = element_blank(), 
                   panel.grid.major.x = element_blank(),
@@ -277,10 +345,10 @@ server <- function(input, output) {
         
         ## CUMULATIVE ELEVATION
         ggplot(data = dat, aes(x = date, y = cumulative_gain))+ 
-            geom_line(color = "navy") + 
+            geom_line(color = "#40C4FF", size = 2) + 
             scale_y_continuous(label = comma_format()) +
-            ggtitle(paste0("Cum Elev Gain Since ", 
-                           format(min(dat$date), "%b %d, %Y"))) +
+            ggtitle(paste0("Elevation Gained (feet) Since ", 
+                           format(input$start_date, "%b %d, %Y"))) +
             ylab("Feet") +
             theme(panel.background = element_blank(), 
                   panel.grid.major.x = element_blank(),
@@ -304,8 +372,9 @@ server <- function(input, output) {
             scale_fill_manual(values = rev(brewer.pal(length(unique(dat$type)), "Blues"))) +
             geom_hline(yintercept = mean(dat$miles), linetype = "dashed")  + 
             scale_y_continuous(label = comma_format()) +
-            ggtitle(paste0("Miles per Day; Average Workout ", 
-                           round(mean(dat$miles), 2), " miles")) +
+            ggtitle("Miles per Day", 
+                    subtitle = paste0("Average Workout ", 
+                                      round(mean(dat$miles), 2), " miles")) +
             ylab("Miles") +
             theme(panel.background = element_blank(), 
                   panel.grid.major.x = element_blank(),
@@ -319,13 +388,32 @@ server <- function(input, output) {
                                                  color = "light gray", size = 1))
     })
     
+    output$table_activities <- renderTable({
+        dat <- format_df()
+        
+        dat <- dat[, c("act_name", "type", "start_time_2", "miles", "minutes", 
+                       "total_elevation_gain_ft")]
+        
+        dat$start_time_2 <- format(dat$start_time_2, "%b %d, %Y %H:%M:%S")
+        dat$miles <- comma(dat$miles, accuracy = 0.01)
+        dat$minutes <- comma(dat$minutes, accuracy = 0.01)
+        dat$total_elevation_gain_ft <- comma(dat$total_elevation_gain_ft, 
+                                             accuracy = 0.01)
+        
+        names(dat) <- c("Activity", "Type", "Start Time", "Miles", "Minutes",
+                        "Total Elevation Gain (ft)")
+        
+        dat
+    })
+    
     output$change_in_mph <- renderPlot({
         dat <- moving_stats()
         
         ggplot(data = dat, aes(x = date, y = min_per_mile)) + 
-            geom_line(color = "navy") +
-            scale_y_continuous(label = comma_format()) +
-            ggtitle("Moving Average Run Speed (last 7 events)") +
+            geom_line(color = "navy", size = 2) +
+            scale_y_continuous(label = comma_format(), limits = c(0, max(dat$min_per_mile) + 0.25)) +
+            ggtitle("Average Run Speed (Mile Time)", 
+                    subtitle = "7 Run Moving Average") +
             ylab("Minutes per Mile") +
             theme(panel.background = element_blank(), 
                   panel.grid.major.x = element_blank(),
@@ -343,9 +431,10 @@ server <- function(input, output) {
         dat <- moving_stats()
         
         ggplot(data = dat, aes(x = date, y = avg_time)) + 
-            geom_line(color = "navy") +
-            scale_y_continuous(label = comma_format()) +
-            ggtitle("Moving Average Time Worked (last 7 events)") +
+            geom_line(color = "navy", size = 2) +
+            scale_y_continuous(label = comma_format(), limits = c(0, max(dat$avg_time) + 0.25)) +
+            ggtitle("Average Minutes Worked",
+                    subtitle = "7 Workout Moving Average") +
             ylab("Minutes") +
             theme(panel.background = element_blank(), 
                   panel.grid.major.x = element_blank(),
