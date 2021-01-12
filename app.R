@@ -17,8 +17,8 @@ header <- dashboardHeader(
     
     tags$li(a(href = paste0('https://twitter.com/intent/tweet?text=Check%20out',
                             '%20how%20great%20of%20a%20runner%20Jake%20(@Stats',
-                            'ManPHL)%20is%20on%20Strava&url=https%3a%2f%2fjakelea',
-                            'rnsdatascience.shinyapps.io%2ftJakeOnStrava%2f'),
+                            'ManPHL)%20is%20on%20@Strava&url=https%3a%2f%2fjakelea',
+                            'rnsdatascience.shinyapps.io%2fJakeOnStrava%2f'),
               target = "_blank",
               icon("twitter"),
               title = "Share this app on Twitter"),
@@ -52,7 +52,7 @@ body <- dashboardBody(
         ),
     
     fluidRow(
-        tabBox(title = "Run Jake Run",
+        tabBox(title = "Run Jake Run!",
                id = "tabset1",
                height = "100%",
                width = "100%",
@@ -92,7 +92,12 @@ body <- dashboardBody(
                        box(
                            width = "100%",
                            title = "Individual Workout Stats",
-                           plotOutput("daily_activity")
+                           splitLayout(
+                               cellWidths = c("50%", "50%"),
+                               
+                               plotOutput("daily_activity"),
+                               plotOutput("daily_minutes")
+                           )
                        ),
                    ),
                    
@@ -299,6 +304,8 @@ server <- function(input, output) {
     output$cumulative_mileage <- renderPlot({
         dat <- cum_graph_df()
         
+        dat <- dat[dat$miles > 0, ]
+        
         ## CUMULATIVE MILEAGE
         ggplot(data = dat, aes(x = date, y = cumulative_mileage)) + 
             geom_line(color = "#3944BC", size = 2) + 
@@ -373,9 +380,35 @@ server <- function(input, output) {
             geom_hline(yintercept = mean(dat$miles), linetype = "dashed")  + 
             scale_y_continuous(label = comma_format()) +
             ggtitle("Miles per Day", 
-                    subtitle = paste0("Average Workout ", 
+                    subtitle = paste0("Average Workout Length: ", 
                                       round(mean(dat$miles), 2), " miles")) +
             ylab("Miles") +
+            theme(panel.background = element_blank(), 
+                  panel.grid.major.x = element_blank(),
+                  panel.grid.major.y = element_line(color = "grey"),
+                  legend.position = "top", legend.text = element_text(size = 12),
+                  legend.title = element_blank(), title = element_text(size = 16),
+                  axis.text = element_text(size = 12),
+                  axis.title.x = element_blank(),
+                  axis.ticks = element_blank(),
+                  plot.background = element_rect(fill = "white", 
+                                                 color = "light gray", size = 1))
+    })
+    
+    output$daily_minutes <- renderPlot({
+        dat <- format_df()
+        
+        ## EACH ACTIVITY
+        ggplot(data = dat, aes(x = date, y = minutes, 
+                               fill = type)) + 
+            geom_bar(stat = "identity", position = "stack") + 
+            scale_fill_manual(values = rev(brewer.pal(length(unique(dat$type)), "Blues"))) +
+            geom_hline(yintercept = mean(dat$minutes), linetype = "dashed")  + 
+            scale_y_continuous(label = comma_format()) +
+            ggtitle("Minutes Worked per Day", 
+                    subtitle = paste0("Average Workout: ", 
+                                      round(mean(dat$minutes), 2), " minutes")) +
+            ylab("Minutes") +
             theme(panel.background = element_blank(), 
                   panel.grid.major.x = element_blank(),
                   panel.grid.major.y = element_line(color = "grey"),
